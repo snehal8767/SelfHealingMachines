@@ -8,14 +8,15 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 
 | Phase | Name | Status |
 |---|---|---|
-| 1 | Requirement analysis | **IN PROGRESS** |
-| 2 | Technical architecture | **IN PROGRESS** |
-| 3 | Project setup | NOT STARTED |
+| 1 | Requirement analysis | **IN PROGRESS** (docs done; Q1 answer pending) |
+| 2 | Technical architecture | **IN PROGRESS** (rules calibrated; team sign-off pending) |
+| 3 | Project setup | **IN PROGRESS** (env/data/repo done; frontend scaffold left) |
+| 3.5 | Data & ML pipeline (Layers 1–2, 4 core) | **DONE** — 42 tests green |
 | 4 | Database & backend | NOT STARTED |
 | 5 | Frontend & UI | NOT STARTED |
 | 6 | API & third-party integration | NOT STARTED |
 | 7 | Feature integration | NOT STARTED |
-| 8 | Testing & debugging | NOT STARTED |
+| 8 | Testing & debugging | **IN PROGRESS** (pipeline tests done) |
 | 9 | Performance optimization | NOT STARTED |
 | 10 | Production deployment | NOT STARTED |
 | 11 | Final verification & documentation | NOT STARTED |
@@ -25,22 +26,33 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 ## Phase 1 — Requirement analysis
 - [x] Read TELIPORT brief + case study PDF (extracted to text)
 - [x] Capture judging weights and submission rules
-- [ ] Confirm Round-1 status / Round-2 eligibility with team
+- [ ] Confirm Round-1 status / Round-2 eligibility with team  ← **blocked on user (Q1)**
 - [x] `PROJECT_REQUIREMENTS.md` written
 
 ## Phase 2 — Technical architecture
 - [x] Layer-by-layer architecture designed
 - [x] Stack selected with rationale
 - [x] Data model + API surface drafted
-- [x] Triage-agent rule draft written
+- [x] Triage-agent rules written **and calibrated on validation data**
 - [ ] Get team sign-off on the two open decisions (subset, dashboard)
 
 ## Phase 3 — Project setup
-- [ ] Create repo skeleton (folders above)
-- [ ] Python venv + `requirements.txt` (pandas, numpy, scikit-learn, mlflow, fastapi, uvicorn, pytest)
-- [ ] Download **NASA C-MAPSS** → `data/raw/` (verify license/terms)
+- [x] Create repo skeleton (folders above)
+- [x] Python venv + `requirements.txt` (pandas, numpy, scikit-learn, mlflow, fastapi, uvicorn, pytest)
+- [x] Download **NASA C-MAPSS** → `data/raw/` (official NASA S3 link verified, all 4 subsets extracted)
 - [ ] Frontend scaffold (Vite + React + Tailwind)
-- [ ] Pre-commit basics: `.gitignore` (data, mlruns, .env), `.env.example`
+- [x] `.gitignore` (data, mlruns, mlflow.db, models, .env) + `.env.example`
+- [x] `git init` + first commit `6b397fd`
+
+## Phase 3.5 — Data & ML pipeline (Layers 1–2, core of 4) — DONE
+- [x] `pipeline/ingest.py` — validated NASA loader (strict column checks, helpful errors)
+- [x] `pipeline/features.py` — clean, rolling mean/std/trend, RUL labels (train clipped, truth not)
+- [x] `pipeline/train.py` — Ridge baseline vs HistGBR candidate + IsolationForest anomaly
+- [x] `pipeline/predict.py` — fleet scoring, last-cycle protocol, schema-drift guard
+- [x] `pipeline/triage.py` — rule agent, thresholds calibrated on validation engines only
+- [x] MLflow (SQLite) logs params/metrics/model artifacts; `models/production.json` pointer
+- [x] 42 tests green; official FD001 test metrics: **RMSE 18.73 / MAE 13.64 / PHM 1087 / recall 0.90**
+- [x] Severity mix verified: CRITICAL 14 · HIGH 10 · MEDIUM 18 · LOW 58 (42 orders)
 
 ## Phase 4 — Database & backend
 - [ ] SQLite schema + migrations (engines, predictions, work_orders, model_runs, sensor_snapshots)
@@ -64,8 +76,9 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 - [ ] Demo retraining run wired to the dashboard button
 
 ## Phase 8 — Testing & debugging
-- [ ] pytest: feature engineering correctness, RUL label logic, agent rules, API contracts
+- [x] pytest: feature engineering correctness, RUL label logic, agent rules, metrics (42 tests)
 - [ ] Pipeline reproducibility test (same seed → same metrics)
+- [ ] API contract tests (once backend exists)
 - [ ] Browser journey test on the deployed URL (console clean, no dead links)
 
 ## Phase 9 — Performance optimization
