@@ -4,6 +4,8 @@
 
 A round-2 prototype for the TELIPORT Case Study 1, built on the NASA C-MAPSS turbofan benchmark.
 
+**Live demo:** <https://self-healing-machines.vercel.app> · **API docs:** <https://self-healing-machines-api.onrender.com/docs>
+
 ```
 sensor stream → clean + rolling features → RUL prediction + anomaly score
              → rule-based triage agent → automatic work order
@@ -117,9 +119,9 @@ cd frontend; npm run build                  # type-check + production build
 Frontend on **Vercel**, API on **Render** (free tier). Full click-by-click steps:
 [`DEPLOY.md`](DEPLOY.md).
 
-- Vercel project root directory: `frontend`
-- Vercel env: `VITE_API_URL=https://<your-service>.onrender.com`
-- Render: import the repo and apply `render.yaml`
+- Dashboard: <https://self-healing-machines.vercel.app> (project root `frontend`)
+- API: <https://self-healing-machines-api.onrender.com> (Blueprint from `render.yaml`, health check `/api/health`)
+- Vercel env: `VITE_API_URL=https://self-healing-machines-api.onrender.com`
 
 Free-tier caveats (documented, not hidden): the API sleeps after ~15 minutes and
 its disk is ephemeral, so work-order resolutions reset on redeploy. Retraining
