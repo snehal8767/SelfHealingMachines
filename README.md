@@ -57,6 +57,8 @@ returns real validation and test metrics for the new run.
 
 ## Repository layout
 
+Source: <https://github.com/snehal8767/SelfHealingMachines>
+
 ```
 pipeline/          ingest → features → train → predict → triage → store
 backend/app/       FastAPI: config, schemas, main (routes + retrain worker)
