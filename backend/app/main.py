@@ -125,7 +125,7 @@ _LANDING_PAGE = """<!doctype html>
 </main>
 </body>
 </html>
-""".replace("{dashboard}", DASHBOARD_URL)
+""".format(dashboard=DASHBOARD_URL)
 
 
 @app.get("/", include_in_schema=False)
