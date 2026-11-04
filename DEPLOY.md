@@ -23,7 +23,7 @@ Everything below is prepared in this repo: `frontend/vercel.json`, `render.yaml`
 
 ## 1. Open the project in VS Code
 
-From `C:\Users\sneha\OneDrive\Desktop\SelfHealingMachines`:
+From `C:\Users\snehal\OneDrive\Desktop\SelfHealingMachines`:
 
 ```powershell
 code .
