@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Data (NASA C-MAPSS — download instructions in data/README.md)
+data/raw/
+data/processed/
+
+# MLflow (tracking DB + artifact store)
+mlruns/
+mlartifacts/
+mlflow.db
+mlflow.db-shm
+mlflow.db-wal
+
+# Trained model artifacts (regenerated deterministically by pipeline/train.py)
+models/
+
+# Secrets / local env
+.env
+
+# Frontend
+node_modules/
+dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
