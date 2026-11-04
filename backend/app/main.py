@@ -102,6 +102,12 @@ def health() -> HealthResponse:
     )
 
 
+@app.get("/health", include_in_schema=False)
+def health_alias() -> HealthResponse:
+    """Convenience alias so ``/health`` never returns a confusing 404."""
+    return health()
+
+
 @api.get("/fleet", response_model=FleetResponse)
 def fleet(subset: str = Query(default=config.SUBSET, max_length=8)) -> FleetResponse:
     try:
