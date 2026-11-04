@@ -1,0 +1,12 @@
+# Runtime dependencies for the deployed API (Render).
+#
+# The API only needs FastAPI + the pipeline's data/ML stack. MLflow is a
+# development/experiment dependency and is intentionally NOT installed on the
+# free web service — retraining is called with log_mlflow=False there.
+fastapi==0.142.2
+uvicorn[standard]==0.54.0
+pandas==3.0.5
+numpy==2.5.1
+scikit-learn==1.9.1
+joblib==1.6.0
+pydantic==2.13.5

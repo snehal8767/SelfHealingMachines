@@ -7,6 +7,8 @@ __pycache__/
 # Data (NASA C-MAPSS — download instructions in data/README.md)
 data/raw/
 data/processed/
+data/shm.db-shm
+data/shm.db-wal
 
 # MLflow (tracking DB + artifact store)
 mlruns/
@@ -20,6 +22,8 @@ models/
 
 # Secrets / local env
 .env
+.env.local
+frontend/.env.local
 
 # Frontend
 node_modules/
@@ -28,4 +32,3 @@ dist/
 # OS / editor
 .DS_Store
 Thumbs.db
-.vscode/

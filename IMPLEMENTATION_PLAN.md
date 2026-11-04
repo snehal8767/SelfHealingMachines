@@ -11,14 +11,14 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 | 1 | Requirement analysis | **IN PROGRESS** (docs done; Q1 answer pending) |
 | 2 | Technical architecture | **IN PROGRESS** (rules calibrated; team sign-off pending) |
 | 3 | Project setup | **IN PROGRESS** (env/data/repo done; frontend scaffold left) |
-| 3.5 | Data & ML pipeline (Layers 1–2, 4 core) | **DONE** — 42 tests green |
-| 4 | Database & backend | NOT STARTED |
-| 5 | Frontend & UI | NOT STARTED |
-| 6 | API & third-party integration | NOT STARTED |
-| 7 | Feature integration | NOT STARTED |
-| 8 | Testing & debugging | **IN PROGRESS** (pipeline tests done) |
+| 3.5 | Data & ML pipeline (Layers 1–2, 4 core) | **DONE** — pipeline + persistence tested |
+| 4 | Database & backend | **TESTED** — FastAPI over SQLite, 10 API tests |
+| 5 | Frontend & UI | **TESTED** — 5 screens, production build green |
+| 6 | API & third-party integration | **TESTED** — CORS, typed schemas, retrain loop verified |
+| 7 | Feature integration | **TESTED** — dashboard reads the same store functions as the CLI |
+| 8 | Testing & debugging | **IN PROGRESS** (pipeline + API suites done) |
 | 9 | Performance optimization | NOT STARTED |
-| 10 | Production deployment | NOT STARTED |
+| 10 | Production deployment | IN PROGRESS — configs ready, awaiting Vercel/Render |
 | 11 | Final verification & documentation | NOT STARTED |
 
 ---
@@ -40,7 +40,7 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 - [x] Create repo skeleton (folders above)
 - [x] Python venv + `requirements.txt` (pandas, numpy, scikit-learn, mlflow, fastapi, uvicorn, pytest)
 - [x] Download **NASA C-MAPSS** → `data/raw/` (official NASA S3 link verified, all 4 subsets extracted)
-- [ ] Frontend scaffold (Vite + React + Tailwind)
+- [x] Frontend scaffold (Vite + React + Tailwind)
 - [x] `.gitignore` (data, mlruns, mlflow.db, models, .env) + `.env.example`
 - [x] `git init` + first commit `6b397fd`
 

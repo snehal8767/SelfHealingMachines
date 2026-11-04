@@ -1,0 +1,30 @@
+# Render blueprint — one-click deploy of the FastAPI backend.
+#
+# In Render: New + → Blueprint → connect this repository → Apply.
+# Render reads this file, installs backend/requirements.txt and starts uvicorn.
+#
+# After the first deploy, copy the service URL (https://<name>.onrender.com)
+# into Vercel as VITE_API_URL, then redeploy the frontend.
+services:
+  - type: web
+    name: self-healing-machines-api
+    runtime: python
+    plan: free
+    region: oregon
+    buildCommand: pip install --upgrade pip && pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.9
+      - key: SHM_SUBSET
+        value: FD001
+      # The seeded database is committed, so the API serves real predictions
+      # from the first request. Writes are ephemeral on the free tier.
+      - key: SHM_DB_PATH
+        value: data/shm.db
+      - key: SHM_CORS_ORIGINS
+        value: "*"
+      # Uncomment and set a secret to require X-API-Token on writes:
+      # - key: SHM_API_TOKEN
+      #   generateValue: true

@@ -6,7 +6,7 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 > only after it has been demonstrated working **on the deployed URL**.
 > Code existing is not enough for either.
 
-**Last updated: 2026-11-04** — 42 pytest green (`pytest tests`, ~25 s).
+**Last updated: 2026-11-05** — 72 pytest collected: 63 passed, 9 skipped (<code>pytest</code>, ~11 s). Frontend production build green.
 
 ---
 
@@ -19,6 +19,7 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 | 1.4 | Rolling-window features (mean, std, trend) | **TESTED** |
 | 1.5 | RUL label construction (train clipped at 125, test truth unclipped) | **TESTED** |
 | 1.6 | Reproducible, one-command feature build | **TESTED** |
+| 1.7 | Persisted processed dataset (parquet + manifest + sha256), test labels kept in a separate file | **TESTED** — `python -m pipeline.dataset --subsets all`; determinism proven by `tests/test_dataset.py` |
 
 ## Layer 2 — Machine Learning
 | # | Feature | Status |
@@ -49,26 +50,26 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 ## Application — Backend (FastAPI)
 | # | Feature | Status |
 |---|---|---|
-| B.1 | `/health`, `/fleet`, `/engines/{id}` | NOT STARTED |
-| B.2 | `/predictions`, `/work-orders` + resolve | NOT STARTED |
-| B.3 | `/models`, `/monitoring`, `/retrain` | NOT STARTED |
-| B.4 | Input validation, error handling, token on mutations | NOT STARTED |
+| B.1 | `/health`, `/fleet`, `/engines/{id}` | **TESTED** — schema-validated, real seeded data |
+| B.2 | `/predictions`, `/work-orders` + resolve | **TESTED** — list/filter/resolve, 404/409 handled |
+| B.3 | `/models`, `/monitoring`, `/retrain` | **TESTED** — retrain job verified end-to-end (2 s) |
+| B.4 | Input validation, error handling, token on mutations | **TESTED** — Pydantic Literal status, optional `X-API-Token` |
 
 ## Application — Frontend (React)
 | # | Feature | Status |
 |---|---|---|
-| F.1 | Fleet dashboard (RUL countdown, severity chips, KPIs) | NOT STARTED |
-| F.2 | Engine detail (sensor trends, feature charts, prediction) | NOT STARTED |
-| F.3 | Work orders page (queue, filters, human actions) | NOT STARTED |
-| F.4 | Models & monitoring page (MLflow runs, metrics, retrain button) | NOT STARTED |
-| F.5 | Loading / empty / error / success states | NOT STARTED |
-| F.6 | Responsive + accessible (keyboard, contrast, aria) | NOT STARTED |
+| F.1 | Fleet dashboard (RUL countdown, severity chips, KPIs) | **TESTED** — 100 rows, filters, RUL bars |
+| F.2 | Engine detail (sensor trends, feature charts, prediction) | **TESTED** — RUL + anomaly chart, audit trail |
+| F.3 | Work orders page (queue, filters, human actions) | **TESTED** — active/open/review/settled + resolve |
+| F.4 | Models & monitoring page (MLflow runs, metrics, retrain button) | **TESTED** — live retrain with polling |
+| F.5 | Loading / empty / error / success states | **TESTED** — shared components on every screen |
+| F.6 | Responsive + accessible (keyboard, contrast, aria) | **TESTED** — mobile nav, labelled controls, focus styles |
 
 ## Quality
 | # | Feature | Status |
 |---|---|---|
-| Q.1 | pytest suite green | **TESTED** — 42 passed |
-| Q.2 | Production build + TypeScript checks pass | NOT STARTED (frontend not scaffolded) |
+| Q.1 | pytest suite green | **TESTED** — 63 passed, 9 skipped |
+| Q.2 | Production build + TypeScript checks pass | **TESTED** — `tsc --noEmit && vite build` green |
 | Q.3 | No fake buttons / dead links / hardcoded demo data presented as real | NOT STARTED |
 | Q.4 | Browser console clean on all pages | NOT STARTED |
 | Q.5 | Live URL verified end-to-end | NOT STARTED |

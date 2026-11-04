@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "API: start",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe -m uvicorn backend.app.main:app --reload --port 8000",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Dashboard: dev",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}\\frontend" },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Tests: python",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe -m pytest -q",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "Frontend: build",
+      "type": "shell",
+      "command": "npm run build",
+      "options": { "cwd": "${workspaceFolder}\\frontend" },
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}
