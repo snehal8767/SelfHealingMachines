@@ -39,6 +39,18 @@ def test_health_reports_seeded_fleet(client: TestClient):
     assert body["engines"] == 100
 
 
+def test_root_serves_landing_page_and_json(client: TestClient):
+    page = client.get("/", headers={"Accept": "text/html"})
+    assert page.status_code == 200
+    assert page.headers["content-type"].startswith("text/html")
+    assert "Self-Healing Machines API" in page.text
+    assert "self-healing-machines.vercel.app" in page.text
+
+    payload = client.get("/").json()
+    assert payload["docs"] == "/docs"
+    assert payload["health"] == "/api/health"
+
+
 def test_fleet_shape_and_kpis(client: TestClient):
     response = client.get("/api/fleet")
     assert response.status_code == 200

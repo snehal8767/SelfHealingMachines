@@ -22,8 +22,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:  # pragma: no cover - import-time bootstrapping
@@ -76,12 +77,67 @@ def _now() -> str:
 # --------------------------------------------------------------------------
 # health / fleet
 # --------------------------------------------------------------------------
+DASHBOARD_URL = "https://self-healing-machines.vercel.app"
+
+_LANDING_PAGE = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-Healing Machines API</title>
+<style>
+  :root {{ color-scheme: dark; }}
+  * {{ box-sizing: border-box; }}
+  body {{ margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+         padding:32px; background:#09090b; color:#e4e4e7;
+         font-family:ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }}
+  main {{ width:100%; max-width:720px; }}
+  .badge {{ display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px;
+           font-size:12px; color:#fbbf24; background:rgba(251,191,36,.08);
+           border:1px solid rgba(251,191,36,.25); }}
+  .dot {{ width:7px; height:7px; border-radius:50%; background:#34d399; }}
+  h1 {{ margin:20px 0 10px; font-size:30px; line-height:1.15; letter-spacing:-.02em; }}
+  p.lead {{ margin:0 0 28px; max-width:60ch; font-size:14px; line-height:1.65; color:#a1a1aa; }}
+  .grid {{ display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); }}
+  a.card {{ display:block; padding:16px 18px; border:1px solid #27272a; border-radius:12px;
+           background:#111113; color:inherit; text-decoration:none;
+           transition:border-color .15s, transform .15s; }}
+  a.card:hover {{ border-color:#52525b; transform:translateY(-1px); }}
+  .k {{ font-size:13px; font-weight:600; color:#fafafa; }}
+  .v {{ margin-top:4px; font-size:12px; color:#71717a; }}
+  footer {{ margin-top:28px; font-size:11.5px; line-height:1.6; color:#52525b; }}
+</style>
+</head>
+<body>
+<main>
+  <span class="badge"><span class="dot"></span> API online &middot; FD001</span>
+  <h1>Self-Healing Machines API</h1>
+  <p class="lead">RUL prediction and deterministic work-order triage for the NASA C-MAPSS fleet.
+     No LLM in the runtime path &mdash; every decision is a documented threshold.</p>
+  <div class="grid">
+    <a class="card" href="{dashboard}"><div class="k">Dashboard &rarr;</div><div class="v">Fleet, work orders, models</div></a>
+    <a class="card" href="/docs"><div class="k">API docs &rarr;</div><div class="v">Swagger &middot; 9 endpoints</div></a>
+    <a class="card" href="/api/health"><div class="k">Health</div><div class="v">/api/health</div></a>
+    <a class="card" href="/api/fleet"><div class="k">Fleet JSON</div><div class="v">/api/fleet</div></a>
+  </div>
+  <footer>Benchmark results on simulated engines, not operational advice.
+          Dataset: NASA C-MAPSS (public domain).</footer>
+</main>
+</body>
+</html>
+""".replace("{dashboard}", DASHBOARD_URL)
+
+
 @app.get("/", include_in_schema=False)
-def root() -> dict[str, str]:
+def root(request: Request) -> Any:
+    """Browser-friendly landing page; plain JSON for API clients."""
+    if "text/html" in request.headers.get("accept", ""):
+        return HTMLResponse(_LANDING_PAGE)
     return {
         "service": "Self-Healing Machines API",
         "docs": "/docs",
         "health": "/api/health",
+        "dashboard": DASHBOARD_URL,
     }
 
 

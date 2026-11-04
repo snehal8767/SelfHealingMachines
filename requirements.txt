@@ -5,4 +5,5 @@ mlflow
 fastapi
 uvicorn
 pytest
+httpx2
 pyarrow
