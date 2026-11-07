@@ -5,6 +5,7 @@ For the Round-2 live demo (or the recorded walkthrough). Times are targets, not 
 ## Before you start
 
 - [ ] Open the dashboard, `/work-orders`, `/models`, `/about` in four tabs.
+- [ ] Click **Owner access** (top bar) and unlock with your key — visitors are read-only, so Resolve and Retrain stay disabled until you do.
 - [ ] Hit `/api/health` once to wake the free API (first call after sleep: ~45 s).
 - [ ] Confirm the fleet tab shows **100** machines and **API online**.
 - [ ] Have the retrain tab ready — it takes ~2–5 s locally, ~30 s on the free host.
@@ -51,7 +52,7 @@ Scroll to the audit trail:
 > "CRITICAL and HIGH open a work order automatically. MEDIUM goes to this human
 > queue. LOW is logged and never bothers anyone."
 
-Click **Resolve** on a MEDIUM order, add nothing:
+Click **Resolve** on a MEDIUM order (owner access unlocked), add nothing:
 
 > "That is the whole human workload: approve or dismiss. The agent does not re-open
 > a settled machine unless it gets genuinely worse — so the queue does not thrash."
