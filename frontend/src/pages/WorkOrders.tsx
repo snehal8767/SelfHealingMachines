@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { useApi } from "../hooks/useApi";
+import { useOwnerKey } from "../hooks/useOwnerKey";
 import type { OrderStatus } from "../types";
 import { Panel } from "../components/Panel";
 import { SeverityBadge } from "../components/SeverityBadge";
@@ -27,6 +28,7 @@ function fetcherFor(tab: Tab) {
 export function WorkOrders() {
   const [tab, setTab] = useState<Tab>("ACTIVE");
   const { data, error, loading, reload } = useApi(() => fetcherFor(tab), [tab]);
+  const { unlocked } = useOwnerKey();
   const [busy, setBusy] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -93,8 +95,8 @@ export function WorkOrders() {
       {actionError ? (
         <p className="rounded-lg border border-red-500/25 bg-red-500/5 px-4 py-2.5 text-xs text-red-300">
           {actionError}
-          {actionError.toLowerCase().includes("token")
-            ? " — set VITE_API_TOKEN to match the server's SHM_API_TOKEN."
+          {actionError.toLowerCase().includes("token") || actionError.toLowerCase().includes("owner")
+            ? " — unlock Owner access in the top bar with the server's SHM_API_TOKEN."
             : ""}
         </p>
       ) : null}
@@ -117,8 +119,15 @@ export function WorkOrders() {
             }
           />
         ) : (
-          <ul className="divide-y divide-white/5">
-            {orders.map((order) => {
+          <>
+            {!unlocked ? (
+              <p className="border-b border-white/5 bg-white/[0.02] px-4 py-2.5 text-[11px] text-zinc-500">
+                Read-only view · unlock <span className="text-zinc-300">Owner access</span> in the
+                top bar to resolve or dismiss orders.
+              </p>
+            ) : null}
+            <ul className="divide-y divide-white/5">
+              {orders.map((order) => {
               const isActive = order.status === "OPEN" || order.status === "HUMAN_REVIEW";
               return (
                 <li key={order.id} className="px-4 py-4 sm:px-5">
@@ -155,17 +164,19 @@ export function WorkOrders() {
                         <>
                           <button
                             type="button"
-                            disabled={busy === order.id}
+                            disabled={busy === order.id || !unlocked}
+                            title={unlocked ? "Mark this order resolved" : "Unlock Owner access first"}
                             onClick={() => handleResolve(order.id, "RESOLVED")}
-                            className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/20 disabled:opacity-50"
+                            className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Resolve
                           </button>
                           <button
                             type="button"
-                            disabled={busy === order.id}
+                            disabled={busy === order.id || !unlocked}
+                            title={unlocked ? "Dismiss as a false alarm" : "Unlock Owner access first"}
                             onClick={() => handleResolve(order.id, "DISMISSED")}
-                            className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-400 transition hover:border-white/20 hover:text-zinc-200 disabled:opacity-50"
+                            className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-400 transition hover:border-white/20 hover:text-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             Dismiss
                           </button>
@@ -181,6 +192,7 @@ export function WorkOrders() {
               );
             })}
           </ul>
+          </>
         )}
       </Panel>
     </div>

@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { api, API_URL } from "../api";
 import { useApi } from "../hooks/useApi";
+import { OwnerAccess } from "./OwnerAccess";
 import { ChipIcon, GaugeIcon, InfoIcon, PulseIcon, WrenchIcon } from "./icons";
 
 const nav = [
@@ -90,14 +91,17 @@ export function Layout() {
                 C-MAPSS · test split
               </span>
             </div>
-            <a
-              href={`${API_URL}/docs`}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-400 transition hover:border-white/20 hover:text-zinc-100"
-            >
-              API docs ↗
-            </a>
+            <div className="flex items-center gap-2">
+              <a
+                href={`${API_URL}/docs`}
+                target="_blank"
+                rel="noreferrer"
+                className="hidden rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-400 transition hover:border-white/20 hover:text-zinc-100 sm:inline-block"
+              >
+                API docs ↗
+              </a>
+              <OwnerAccess />
+            </div>
           </div>
 
           <nav className="flex gap-1 overflow-x-auto px-3 pb-2 lg:hidden" aria-label="Primary mobile">

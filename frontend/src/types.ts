@@ -140,4 +140,6 @@ export interface HealthResponse {
   subset: string;
   db_ready: boolean;
   engines: number;
+  /** False means the server has no owner key, so writes return 503. */
+  owner_configured?: boolean;
 }

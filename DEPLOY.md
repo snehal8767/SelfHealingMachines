@@ -82,10 +82,31 @@ seed, and `SHM_DB_PATH=data/shm.db` is set by the blueprint.
 **Note:** free instances sleep after ~15 minutes. The first request after a sleep
 takes ~30–60 s. That is normal.
 
-### Optional: protect writes
+### Required: enable owner writes
 
-Render → service → Environment → add `SHM_API_TOKEN` = a long random string.
-Then set the same value in Vercel as `VITE_API_TOKEN` and redeploy the frontend.
+The dashboard is public to read, but **only the owner can change data**. Writes
+fail closed until a key exists:
+
+1. Generate a key locally:
+
+   ```powershell
+   [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Max 256 }))
+   ```
+
+2. Render → service → **Environment** → add `SHM_API_TOKEN` = that value →
+   save (the service redeploys).
+3. Open the dashboard → **Owner access** (top bar) → paste the key → **Unlock**.
+   It is checked by the server and stored only in that browser.
+
+Do **not** create `VITE_API_TOKEN` in Vercel. Vite bakes it into public
+JavaScript, which would hand every visitor the key.
+
+Verify the closed loop is protected:
+
+```bash
+curl -X POST https://<service>.onrender.com/api/retrain -H "Content-Type: application/json" -d "{}"
+# => 401 {"detail":"Invalid or missing X-API-Token"}
+```
 
 ---
 
@@ -155,7 +176,8 @@ git push
 | `Cannot reach the API at http://localhost:8000` on the live site | The build used the default URL | Same fix as above |
 | CORS error in console | `SHM_CORS_ORIGINS` restricted | Blueprint sets `*`; if you changed it, include the Vercel domain |
 | Health returns `degraded` | DB missing/unreadable | Confirm `data/shm.db` is in the repo and `SHM_DB_PATH` is correct |
-| Resolve returns 401 | `SHM_API_TOKEN` set on Render but `VITE_API_TOKEN` missing in Vercel | Add the matching token and redeploy |
+| Resolve returns 401 | Wrong or missing owner key | Click **Owner access** and unlock with the same value as `SHM_API_TOKEN` |
+| Resolve/retrain returns 503 | `SHM_API_TOKEN` not set on the server | Add it in Render → Environment (writes fail closed by design) |
 | Retrain returns 503 | Raw FD001 files missing on the host | Ensure `data/raw/cmapss/data/*_FD001.txt` are committed |
 | Retrain stuck on RUNNING | Render instance restarted mid-job | Jobs are in-memory; retry once the service is awake |
 | `dist` not found on Vercel | Root directory not set to `frontend` | Project settings → Root Directory → `frontend` |

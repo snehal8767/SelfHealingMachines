@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useApi } from "../hooks/useApi";
+import { useOwnerKey } from "../hooks/useOwnerKey";
 import type { ModelMetrics, RetrainStatus } from "../types";
 import { Panel, StatCard } from "../components/Panel";
 import { ErrorBlock, LoadingBlock } from "../components/StateViews";
@@ -29,6 +30,7 @@ function metricRow(
 export function Models() {
   const models = useApi(api.models, []);
   const monitoring = useApi(api.monitoring, []);
+  const { unlocked } = useOwnerKey();
   const [job, setJob] = useState<RetrainStatus | null>(null);
   const [starting, setStarting] = useState(false);
   const [retrainError, setRetrainError] = useState<string | null>(null);
@@ -165,10 +167,17 @@ export function Models() {
               This button runs the real Layer-2 pipeline (features → fit → validate → promote →
               triage → work orders). Nothing is simulated; expect 30–60 seconds on a free host.
             </p>
+            {!unlocked ? (
+              <p className="rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 text-[11px] leading-relaxed text-zinc-500">
+                Read-only · unlock <span className="text-zinc-300">Owner access</span> in the top
+                bar to start a retrain.
+              </p>
+            ) : null}
             <button
               type="button"
               onClick={startRetrain}
-              disabled={starting || retrainRunning}
+              disabled={starting || retrainRunning || !unlocked}
+              title={unlocked ? "Run the real training pipeline" : "Unlock Owner access first"}
               className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 py-2.5 text-sm font-medium text-amber-200 transition hover:bg-amber-400/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <RefreshIcon className={`h-4 w-4 ${retrainRunning ? "animate-spin" : ""}`} />
@@ -178,6 +187,10 @@ export function Models() {
             {retrainError ? (
               <p className="rounded-lg border border-red-500/25 bg-red-500/5 px-3 py-2 text-[11px] text-red-300">
                 {retrainError}
+                {retrainError.toLowerCase().includes("token") ||
+                retrainError.toLowerCase().includes("owner")
+                  ? " — unlock Owner access in the top bar with the server's SHM_API_TOKEN."
+                  : ""}
               </p>
             ) : null}
 

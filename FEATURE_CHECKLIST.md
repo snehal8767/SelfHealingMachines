@@ -6,7 +6,7 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 > only after it has been demonstrated working **on the deployed URL**.
 > Code existing is not enough for either.
 
-**Last updated: 2026-11-05** — 72 pytest collected: 63 passed, 9 skipped (<code>pytest</code>, ~11 s). Frontend production build green.
+**Last updated: 2026-11-07** — 75 pytest collected: 66 passed, 9 skipped (<code>pytest</code>, ~33 s). Frontend production build green. Owner-only writes are fail-closed and tested.
 
 ---
 
@@ -36,16 +36,16 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 |---|---|---|
 | 3.1 | MLflow experiment tracking (params + metrics + artifacts) | **TESTED** — SQLite backend, run `da8a51ab…` verified |
 | 3.2 | Model versioning / production pointer (`models/production.json`, selection rule = lowest RMSE) | **TESTED** |
-| 3.3 | Retraining flow triggered by "new data" | NOT STARTED |
-| 3.4 | Monitoring view (metric trends, RUL distribution, drift signal) | NOT STARTED |
+| 3.3 | Retraining flow triggered by "new data" | **TESTED** — `/api/retrain` runs the real pipeline in a background job, promotes the winner and re-scores the fleet |
+| 3.4 | Monitoring view (metric trends, RUL distribution, drift signal) | **TESTED** — `/api/monitoring`: RUL bands, severity mix, recent agent activity |
 
 ## Layer 4 — Triage Agent (no LLM)
 | # | Feature | Status |
 |---|---|---|
 | 4.1 | Rule engine: RUL + anomaly + trend → severity | **TESTED** — bands calibrated on validation engines only |
-| 4.2 | Auto-create work order for CRITICAL/HIGH | **TESTED** (logic + status mapping; not yet persisted) |
-| 4.3 | Human exception queue for MEDIUM (approve/override/dismiss) | NOT STARTED — needs DB + API + UI |
-| 4.4 | Full audit trail of agent decisions | NOT STARTED — needs `agent_log` table |
+| 4.2 | Auto-create work order for CRITICAL/HIGH | **TESTED** — persisted; one active order per machine enforced by a partial unique index |
+| 4.3 | Human exception queue for MEDIUM (approve/override/dismiss) | **TESTED** — HUMAN_REVIEW tab + owner resolve/dismiss |
+| 4.4 | Full audit trail of agent decisions | **TESTED** — `agent_log` table surfaced on Models & monitoring |
 
 ## Application — Backend (FastAPI)
 | # | Feature | Status |
@@ -53,7 +53,8 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 | B.1 | `/health`, `/fleet`, `/engines/{id}` | **TESTED** — schema-validated, real seeded data |
 | B.2 | `/predictions`, `/work-orders` + resolve | **TESTED** — list/filter/resolve, 404/409 handled |
 | B.3 | `/models`, `/monitoring`, `/retrain` | **TESTED** — retrain job verified end-to-end (2 s) |
-| B.4 | Input validation, error handling, token on mutations | **TESTED** — Pydantic Literal status, optional `X-API-Token` |
+| B.4 | Input validation, error handling, owner-only writes | **TESTED** — Pydantic Literal status; `X-API-Token` compared in constant time; **fails closed with 503** when `SHM_API_TOKEN` is unset |
+| B.5 | `/admin/verify` — lets the UI validate a pasted key before storing it | **TESTED** — 401 wrong key, 200 owner key |
 
 ## Application — Frontend (React)
 | # | Feature | Status |
@@ -64,11 +65,12 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 | F.4 | Models & monitoring page (MLflow runs, metrics, retrain button) | **TESTED** — live retrain with polling |
 | F.5 | Loading / empty / error / success states | **TESTED** — shared components on every screen |
 | F.6 | Responsive + accessible (keyboard, contrast, aria) | **TESTED** — mobile nav, labelled controls, focus styles |
+| F.7 | Owner access unlock (visitors read-only, key stored in browser, never in the bundle) | **TESTED** — write buttons disabled until unlocked |
 
 ## Quality
 | # | Feature | Status |
 |---|---|---|
-| Q.1 | pytest suite green | **TESTED** — 63 passed, 9 skipped |
+| Q.1 | pytest suite green | **TESTED** — 66 passed, 9 skipped |
 | Q.2 | Production build + TypeScript checks pass | **TESTED** — `tsc --noEmit && vite build` green |
 | Q.3 | No fake buttons / dead links / hardcoded demo data presented as real | NOT STARTED |
 | Q.4 | Browser console clean on all pages | NOT STARTED |
@@ -80,5 +82,5 @@ Status legend: `NOT STARTED` · `IN PROGRESS` · `BLOCKED` · `IMPLEMENTED` · `
 | D.1 | Round-1 design deck (if still required) | **BLOCKED** — pending answer H1 (was Round 1 submitted before 2 Nov?) |
 | D.2 | Round-2 10-slide PPT | NOT STARTED |
 | D.3 | Architecture diagram: data → features → model → agent → work order | IN PROGRESS — ASCII version in `TECHNICAL_ARCHITECTURE.md`; needs a polished graphic |
-| D.4 | Demo walkthrough script | NOT STARTED |
+| D.4 | Demo walkthrough script | **TESTED** — `docs/DEMO_SCRIPT.md`, 4-minute run |
 | D.5 | README + TEST_REPORT + DEPLOYMENT_STATUS | IN PROGRESS — `data/README.md` done; root README pending |

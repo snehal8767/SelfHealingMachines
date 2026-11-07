@@ -4,15 +4,17 @@ Design notes for the review:
 
 * The API never re-implements ML logic. It calls the same ``pipeline.store``
   functions the CLI uses, so the dashboard cannot disagree with the pipeline.
-* Reads are public. Writes (resolving a work order, retraining) are guarded by
-  ``X-API-Token`` whenever ``SHM_API_TOKEN`` is set — open by default so the
-  local demo needs no setup.
+* Reads are public. Writes (resolving a work order, retraining) require
+  ``X-API-Token`` to match ``SHM_API_TOKEN``. This **fails closed**: when the
+  server has no key configured, every write returns 503 instead of silently
+  letting strangers mutate the demo.
 * ``/api/retrain`` runs the real Layer-2 pipeline in a background thread and
   re-syncs the fleet, which is the "closed loop" the brief asks for. It needs
   the raw NASA files on disk; without them it returns 503 instead of pretending.
 """
 from __future__ import annotations
 
+import hmac
 import json
 import statistics
 import sys
@@ -66,12 +68,30 @@ api = APIRouter(prefix="/api")
 
 
 def require_token(x_api_token: str | None = Header(default=None)) -> None:
-    if config.API_TOKEN and x_api_token != config.API_TOKEN:
+    """Owner-only guard for every mutation.
+
+    Fails closed: an unconfigured server refuses writes (503) rather than
+    exposing them. The comparison is constant-time to avoid timing oracles.
+    """
+    if not config.API_TOKEN:
+        raise HTTPException(
+            status_code=503,
+            detail="Owner key is not configured on the server (set SHM_API_TOKEN). Writes are disabled.",
+        )
+    if not x_api_token or not hmac.compare_digest(x_api_token, config.API_TOKEN):
         raise HTTPException(status_code=401, detail="Invalid or missing X-API-Token")
 
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+# --------------------------------------------------------------------------
+# owner access — lets the UI check a pasted key before storing it
+# --------------------------------------------------------------------------
+@api.post("/admin/verify")
+def admin_verify(_: None = Depends(require_token)) -> dict[str, bool]:
+    return {"ok": True}
 
 
 # --------------------------------------------------------------------------
@@ -155,6 +175,7 @@ def health() -> HealthResponse:
         subset=config.SUBSET,
         db_ready=db_ready,
         engines=engines,
+        owner_configured=bool(config.API_TOKEN),
     )
 
 

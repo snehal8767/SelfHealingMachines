@@ -19,6 +19,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SEED_DB = ROOT / "data" / "shm.db"
 DB_READY = SEED_DB.exists()
 
+OWNER_KEY = "test-owner-key"
+AUTH = {"X-API-Token": OWNER_KEY}
+
 
 @pytest.fixture()
 def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
@@ -28,7 +31,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> TestClient:
     shutil.copy(SEED_DB, db)
     monkeypatch.setenv("SHM_DB_PATH", str(db))
     monkeypatch.setattr(config, "DB_PATH", db)
-    monkeypatch.setattr(config, "API_TOKEN", "")
+    monkeypatch.setattr(config, "API_TOKEN", OWNER_KEY)
     return TestClient(app)
 
 
@@ -37,6 +40,7 @@ def test_health_reports_seeded_fleet(client: TestClient):
     assert body["status"] == "ok"
     assert body["db_ready"] is True
     assert body["engines"] == 100
+    assert body["owner_configured"] is True
 
 
 def test_root_serves_landing_page_and_json(client: TestClient):
@@ -90,6 +94,7 @@ def test_resolve_work_order_then_conflict(client: TestClient):
     resolved = client.post(
         f"/api/work-orders/{order['id']}/resolve",
         json={"status": "RESOLVED", "note": "Technician replaced the bearing"},
+        headers=AUTH,
     )
     assert resolved.status_code == 200
     assert resolved.json()["status"] == "RESOLVED"
@@ -98,16 +103,22 @@ def test_resolve_work_order_then_conflict(client: TestClient):
     again = client.post(
         f"/api/work-orders/{order['id']}/resolve",
         json={"status": "DISMISSED"},
+        headers=AUTH,
     )
     assert again.status_code == 409
 
-    assert client.post("/api/work-orders/999999/resolve", json={"status": "RESOLVED"}).status_code == 404
+    assert (
+        client.post(
+            "/api/work-orders/999999/resolve", json={"status": "RESOLVED"}, headers=AUTH
+        ).status_code
+        == 404
+    )
 
 
 def test_resolve_rejects_bad_status(client: TestClient):
     order = client.get("/api/work-orders").json()[0]
     response = client.post(
-        f"/api/work-orders/{order['id']}/resolve", json={"status": "DONE"}
+        f"/api/work-orders/{order['id']}/resolve", json={"status": "DONE"}, headers=AUTH
     )
     assert response.status_code == 422
 
@@ -134,19 +145,44 @@ def test_retrain_unknown_job_is_404(client: TestClient):
     assert client.get("/api/retrain/does-not-exist").status_code == 404
 
 
-def test_token_guard_on_mutations(client: TestClient, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(config, "API_TOKEN", "secret-token")
+def test_writes_require_the_owner_key(client: TestClient):
     order = client.get("/api/work-orders", params={"status": "HUMAN_REVIEW"}).json()[0]
     url = f"/api/work-orders/{order['id']}/resolve"
 
+    # no key and a wrong key are both rejected
     assert client.post(url, json={"status": "RESOLVED"}).status_code == 401
     assert (
         client.post(url, json={"status": "RESOLVED"}, headers={"X-API-Token": "wrong"}).status_code
         == 401
     )
-    assert (
-        client.post(
-            url, json={"status": "RESOLVED"}, headers={"X-API-Token": "secret-token"}
-        ).status_code
-        == 200
+    # nothing changed while the attempts were rejected
+    still_there = client.get("/api/work-orders", params={"status": "HUMAN_REVIEW"}).json()
+    assert any(o["id"] == order["id"] for o in still_there)
+
+    # the owner key works, and only the owner key
+    ok = client.post(url, json={"status": "RESOLVED"}, headers=AUTH)
+    assert ok.status_code == 200
+    assert ok.json()["status"] == "RESOLVED"
+
+
+def test_writes_fail_closed_when_no_key_is_configured(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+):
+    """An unconfigured server must refuse writes, not allow them."""
+    monkeypatch.setattr(config, "API_TOKEN", "")
+    order = client.get("/api/work-orders").json()[0]
+
+    response = client.post(
+        f"/api/work-orders/{order['id']}/resolve",
+        json={"status": "RESOLVED"},
+        headers={"X-API-Token": "anything"},
     )
+    assert response.status_code == 503
+    assert "not configured" in response.json()["detail"]
+    assert client.post("/api/retrain", json={}).status_code == 503
+
+
+def test_owner_key_verification_endpoint(client: TestClient):
+    assert client.post("/api/admin/verify").status_code == 401
+    assert client.post("/api/admin/verify", headers={"X-API-Token": "wrong"}).status_code == 401
+    assert client.post("/api/admin/verify", headers=AUTH).json() == {"ok": True}

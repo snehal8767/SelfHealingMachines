@@ -158,7 +158,7 @@ def _now() -> str:
 def sync_fleet(
     subset: str = "FD001",
     db_path: Path | str | None = None,
-    model_dir: Any = None,
+    model_dir: Path | str | None = None,
 ) -> dict[str, Any]:
     """Score the fleet, run the agent, persist everything. Idempotent."""
     init_db(db_path)
@@ -374,16 +374,20 @@ def list_work_orders(
     db_path: Path | str | None = None,
 ) -> list[dict[str, Any]]:
     init_db(db_path)
-    sql = f"""SELECT * FROM work_orders WHERE subset=?
-              {'AND status = ?' if status else ''}
-              {'AND status IN (\'OPEN\',\'HUMAN_REVIEW\')' if active_only and not status else ''}
-              ORDER BY {SEVERITY_ORDER.replace('severity', 'severity')}, id DESC"""
+    clauses = ["subset = ?"]
+    params: list[Any] = [subset]
+    if status:
+        clauses.append("status = ?")
+        params.append(status)
+    elif active_only:
+        clauses.append("status IN ('OPEN','HUMAN_REVIEW')")
+    sql = (
+        f"SELECT * FROM work_orders WHERE {' AND '.join(clauses)} "
+        f"ORDER BY {SEVERITY_ORDER}, id DESC"
+    )
     with connect(db_path) as conn:
-        if status:
-            rows = conn.execute(sql, (subset, status)).fetchall()
-        else:
-            rows = conn.execute(sql, (subset,)).fetchall()
-    return [dict(r) for r in rows]
+        rows = conn.execute(sql, params).fetchall()
+    return _rows(rows)
 
 
 def resolve_work_order(

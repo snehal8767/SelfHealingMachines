@@ -8,12 +8,11 @@ import type {
   RetrainStatus,
   WorkOrder,
 } from "./types";
+import { getOwnerKey } from "./lib/ownerKey";
 
 export const API_URL = (
   (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:8000"
 ).replace(/\/$/, "");
-
-const TOKEN = (import.meta.env.VITE_API_TOKEN as string | undefined) ?? "";
 
 export class ApiError extends Error {
   status: number;
@@ -26,13 +25,14 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getOwnerKey();
   let response: Response;
   try {
     response = await fetch(`${API_URL}${path}`, {
       ...init,
       headers: {
         "Content-Type": "application/json",
-        ...(TOKEN ? { "X-API-Token": TOKEN } : {}),
+        ...(token ? { "X-API-Token": token } : {}),
         ...(init?.headers ?? {}),
       },
     });
@@ -82,5 +82,10 @@ export const api = {
       body: JSON.stringify({}),
     }),
   retrainStatus: (jobId: string) => request<RetrainStatus>(`/api/retrain/${jobId}`),
+  verifyOwner: () =>
+    request<{ ok: boolean }>("/api/admin/verify", {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
   about: () => request<AboutResponse>("/api/about"),
 };

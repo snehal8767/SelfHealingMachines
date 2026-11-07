@@ -117,6 +117,8 @@ class HealthResponse(BaseModel):
     subset: str
     db_ready: bool
     engines: int
+    #: False means the server has no SHM_API_TOKEN, so writes return 503.
+    owner_configured: bool = False
 
 
 class AboutResponse(BaseModel):

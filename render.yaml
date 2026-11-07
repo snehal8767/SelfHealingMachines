@@ -25,6 +25,9 @@ services:
         value: data/shm.db
       - key: SHM_CORS_ORIGINS
         value: "*"
-      # Uncomment and set a secret to require X-API-Token on writes:
-      # - key: SHM_API_TOKEN
-      #   generateValue: true
+      # Owner key for writes (resolve / retrain). Leave unset and the API fails
+      # closed: writes return 503 while every read stays public. Set a long
+      # random value in Render → Environment, then paste the same value into
+      # the dashboard's "Owner access" button. Never bake it into Vercel.
+      - key: SHM_API_TOKEN
+        sync: false
