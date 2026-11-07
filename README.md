@@ -108,7 +108,7 @@ VITE_API_URL=http://localhost:8000
 ### Tests
 
 ```powershell
-.venv\Scripts\python.exe -m pytest          # 63 passed, 9 skipped
+.venv\Scripts\python.exe -m pytest          # 66 passed, 9 skipped
 cd frontend; npm run build                  # type-check + production build
 ```
 
@@ -122,6 +122,24 @@ Frontend on **Vercel**, API on **Render** (free tier). Full click-by-click steps
 - Dashboard: <https://self-healing-machines.vercel.app> (project root `frontend`)
 - API: <https://self-healing-machines-api.onrender.com> (Blueprint from `render.yaml`, health check `/api/health`)
 - Vercel env: `VITE_API_URL=https://self-healing-machines-api.onrender.com`
+
+### Owner access (public read, owner-only write)
+
+The dashboard is public to view — no login wall. Only the owner can resolve work
+orders or start a retrain:
+
+1. Set `SHM_API_TOKEN` on Render → Environment (any long random string):
+
+   ```powershell
+   [Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Max 256 }))
+   ```
+
+2. Open the live dashboard → **Owner access** (top bar) → paste the same value.
+   The server verifies it; the browser stores it locally.
+
+The key is **never** put in Vercel or any `VITE_*` variable — Vite bundles are
+public. When `SHM_API_TOKEN` is unset the API **fails closed**: writes return
+503, reads stay open.
 
 Free-tier caveats (documented, not hidden): the API sleeps after ~15 minutes and
 its disk is ephemeral, so work-order resolutions reset on redeploy. Retraining
